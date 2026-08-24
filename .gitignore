@@ -1,0 +1,5 @@
+.anna/
+node_modules/
+test-results/
+dist/
+*.log

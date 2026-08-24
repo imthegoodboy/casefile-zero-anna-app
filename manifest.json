@@ -1,0 +1,45 @@
+{
+  "schema": 2,
+  "permissions": ["llm.complete", "storage.read", "storage.write"],
+  "host_capabilities": ["llm.complete", "aps.kv"],
+  "required_executas": [],
+  "optional_executas": [],
+  "system_prompt_addendum": "Casefile Zero is an interactive fictional detective game. When the user mentions it, help with gameplay without inventing evidence or revealing a case solution unless the user explicitly asks for a spoiler. Treat every person, location, and crime in the app as fictional.",
+  "tags": ["game", "detective", "mystery", "puzzle", "story"],
+  "ui": {
+    "bundle": {
+      "format": "static-spa",
+      "entry": "index.html",
+      "external_origins": []
+    },
+    "views": [
+      {
+        "name": "main",
+        "title": "Casefile Zero",
+        "default": true,
+        "entry": "index.html",
+        "default_size": { "w": 1240, "h": 820 },
+        "min_size": { "w": 320, "h": 520 },
+        "max_size": { "w": 1720, "h": 1280 },
+        "resizable": true,
+        "movable": true,
+        "single_instance": true,
+        "summary_template": "Detective workspace for the active fictional case"
+      }
+    ],
+    "host_api": {
+      "llm": ["complete"],
+      "storage": ["get", "set", "delete", "list"],
+      "window": ["set_title", "ready"]
+    },
+    "csp_overrides": {
+      "script-src": ["'self'"]
+    },
+    "state_merge": "last_writer_wins"
+  },
+  "dev": {
+    "fixtures": ["fixtures/*.jsonl"],
+    "seed_storage": {},
+    "user_id": 1
+  }
+}

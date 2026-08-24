@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0b0b" />
+    <meta name="description" content="Casefile Zero — a cinematic detective game for Anna." />
+    <title>Casefile Zero</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="preload" href="./assets/terminal-crime-scene.webp" as="image" fetchpriority="high" />
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./app.js" type="module"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#workspace">Skip to case workspace</a>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="island-nav" aria-label="Primary navigation">
+      <a class="wordmark" href="#/desk" aria-label="Casefile Zero desk">
+        <img src="./icon.svg" width="34" height="34" alt="" />
+        <span><strong>Casefile</strong><em>Zero</em></span>
+      </a>
+      <nav class="nav-links" aria-label="Game sections">
+        <a href="#/desk" data-nav="desk">Case desk</a>
+        <a href="#/detective" data-nav="detective">Detective</a>
+        <a href="#/archive" data-nav="archive">Archive</a>
+      </nav>
+      <div class="nav-actions">
+        <span class="sync-state" id="sync-state"><i></i><span>Device save</span></span>
+        <button class="sound-toggle" id="sound-toggle" type="button" aria-label="Turn sound on" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6l-5 4H4Zm13-2c1.3 1.1 2 2.4 2 4s-.7 2.9-2 4" /></svg>
+        </button>
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false"><span></span><span></span></button>
+      </div>
+    </header>
+    <div class="mobile-menu" id="mobile-menu" hidden>
+      <nav aria-label="Mobile navigation">
+        <a href="#/desk">Case desk</a><a href="#/detective">Detective</a><a href="#/archive">Archive</a>
+      </nav>
+    </div>
+    <main id="workspace" tabindex="-1"></main>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <div class="dialog-layer" id="dialog-layer"></div>
+    <noscript><div class="noscript">Casefile Zero needs JavaScript to run the investigation.</div></noscript>
+  </body>
+</html>

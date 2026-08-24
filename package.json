@@ -1,0 +1,13 @@
+{
+  "name": "casefile-zero-anna-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A cinematic detective game for Anna",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "validate": "anna-app validate --strict",
+    "check": "npm test && anna-app validate --strict",
+    "dev": "anna-app dev --port 5187"
+  }
+}

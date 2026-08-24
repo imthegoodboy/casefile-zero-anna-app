@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Casefile Zero</title>
+  <desc id="desc">A brass fingerprint forming a zero on a dark field</desc>
+  <rect width="128" height="128" rx="28" fill="#0a0b0b"/>
+  <path d="M64 22c-23 0-39 16-39 39 0 17 7 30 18 39M64 32c-17 0-29 12-29 29 0 13 5 23 14 31M64 42c-11 0-19 8-19 19 0 17 8 30 19 43M64 22c23 0 39 16 39 39 0 17-7 30-18 39M64 32c17 0 29 12 29 29 0 13-5 23-14 31M64 42c11 0 19 8 19 19 0 17-8 30-19 43M55 61c0-6 4-10 9-10s9 4 9 10c0 11-3 23-9 34-6-11-9-23-9-34Z" fill="none" stroke="#b28a4f" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="99" cy="29" r="7" fill="#c6412d"/>
+</svg>
