@@ -32,4 +32,6 @@ fnm exec --using=v22.23.2 -- C:\Users\parth\AppData\Roaming\npm\anna-app.cmd app
 
 Release `1.0.1` includes three English product screenshots under `bundle/listing/`, explicit saveable Agent session permission modes (`auto` and `fixed`), bounded hydrated game state, serialized Anna Storage writes, and browser regression coverage for the complete investigation loop plus reload recovery. Run `anna-app apps sync-meta --account $ANNA_HOST --json` after publishing if the listing does not immediately show the screenshot URLs.
 
+Verified Anna candidate: version `1.0.1`, version id `586`, content hash `9f8cfe6fb277aab05e1176e50eba229ba6d11da0973e765226e992255b496e0e`, bundle `bundle_ready` (15 files). `apps submit-review` pins `review_candidate_version=1.0.1`; owner install reports `installed_version=1.0.1`, `latest_version=1.0.1`, `update_available=false`, and satisfied grants. Listing sync returned three Anna CDN screenshot URLs. Lifecycle remains `pending_review` / `is_published=false` until Anna approves it.
+
 Do not use the Developer Console version-history **Publish** action or `apps release` while the app is awaiting review; those are public-release operations. `apps publish` creates the immutable candidate, then install that exact version, verify grants, and submit the candidate for review.
