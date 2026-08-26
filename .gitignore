@@ -1,5 +1,6 @@
 .anna/
 node_modules/
 test-results/
+output/
 dist/
 *.log

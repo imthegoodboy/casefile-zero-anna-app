@@ -103,6 +103,7 @@ test("saved games are sanitized before hydration", () => {
     caseId: "last-departure",
     discovered: ["glove", "not-real", "glove"],
     interviews: { mara: ["0", "0"], ghost: ["3"] },
+    conversation: { mara: [{ role: "detective", text: "x".repeat(5000) }, { role: "intruder", text: "nope" }] },
     links: ["glove::ledger", "fake::pair"],
     hintsUsed: -9,
   });
@@ -110,6 +111,10 @@ test("saved games are sanitized before hydration", () => {
   assert.deepEqual(normalized.interviews, { mara: ["0"] });
   assert.deepEqual(normalized.links, ["glove::ledger"]);
   assert.equal(normalized.hintsUsed, 0);
+  assert.equal(normalized.conversation.mara.length, 1);
+  assert.equal(normalized.conversation.mara[0].text.length, 520);
+  assert.equal(normalized.result, null);
+  assert.ok(JSON.stringify(normalized).length < 12_000);
 });
 
 test("offline custom questions return a case-safe recorded response", () => {

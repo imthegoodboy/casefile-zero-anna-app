@@ -12,6 +12,10 @@ npm test
 anna-app validate --strict
 anna-app dev --port 5187
 
+# Optional browser acceptance (set PLAYWRIGHT_MODULE to a local Playwright package)
+node scripts/browser-smoke.mjs
+node scripts/harness-smoke.mjs
+
 # After browser acceptance:
 anna-app apps publish --account $ANNA_HOST --json
 ```
@@ -26,4 +30,6 @@ The current CLI (`anna-app` 0.1.49) crashed during publish under system Node 24 
 fnm exec --using=v22.23.2 -- C:\Users\parth\AppData\Roaming\npm\anna-app.cmd apps publish --account https://anna.partners --json
 ```
 
-Production version `1.0.0` is Anna version id `570`, content hash `904f8fc44e6fe8b110cedce4278b31499fa610921352853782931b5aa36e6649`. It was installed successfully and submitted for public review on 2026-08-24.
+Release `1.0.1` includes three English product screenshots under `bundle/listing/`, explicit saveable Agent session permission modes (`auto` and `fixed`), bounded hydrated game state, serialized Anna Storage writes, and browser regression coverage for the complete investigation loop plus reload recovery. Run `anna-app apps sync-meta --account $ANNA_HOST --json` after publishing if the listing does not immediately show the screenshot URLs.
+
+Do not use the Developer Console version-history **Publish** action or `apps release` while the app is awaiting review; those are public-release operations. `apps publish` creates the immutable candidate, then install that exact version, verify grants, and submit the candidate for review.

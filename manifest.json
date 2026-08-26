@@ -30,7 +30,16 @@
     "host_api": {
       "llm": ["complete"],
       "storage": ["get", "set", "delete", "list"],
-      "window": ["set_title", "ready"]
+      "window": ["set_title", "ready"],
+      "agent": {
+        "session": {
+          "auto": true,
+          "fixed": {
+            "client_ids": []
+          }
+        },
+        "tools": []
+      }
     },
     "csp_overrides": {
       "script-src": ["'self'"]

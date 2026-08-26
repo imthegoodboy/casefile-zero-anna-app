@@ -32,3 +32,13 @@ anna-app apps publish --account https://anna.partners --json
 ```
 
 After upload, install and test the created version in Anna before submitting it for public review.
+
+The release includes three real product-state screenshots (`bundle/listing/desk.png`, `board.png`, and `result.png`).
+For a repeatable browser check, point `PLAYWRIGHT_MODULE` at a local Playwright package and run:
+
+```powershell
+node scripts/browser-smoke.mjs
+node scripts/harness-smoke.mjs
+```
+
+These checks cover first use, the full clue → interview → evidence → accusation → result loop, active-game recovery after a reload, Anna-hosted runtime connection, and mobile horizontal-overflow protection.

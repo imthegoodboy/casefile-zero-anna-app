@@ -34,18 +34,47 @@ export function normalizeGame(value) {
   const clueIds = new Set(caseFile.clues.map((clue) => clue.id));
   const suspectIds = new Set(Object.keys(caseFile.suspects));
   const validLinks = caseFile.connections.map((connection) => connectionKey(connection.ids));
+  const safeConversation = Object.fromEntries(
+    Object.entries(source.conversation || {})
+      .filter(([id]) => suspectIds.has(id))
+      .map(([id, values]) => [
+        id,
+        Array.isArray(values)
+          ? values
+            .filter((item) => item && (item.role === "detective" || item.role === "suspect"))
+            .map((item) => ({ role: item.role, text: String(item.text || "").slice(0, 520) }))
+            .filter((item) => item.text)
+            .slice(-20)
+          : [],
+      ]),
+  );
+  const result = source.result && typeof source.result === "object"
+    ? {
+      solved: Boolean(source.result.solved),
+      score: Math.max(0, Math.min(1000, Number(source.result.score) || 0)),
+      rank: String(source.result.rank || "Case remains open").slice(0, 48),
+      culpritCorrect: Boolean(source.result.culpritCorrect),
+      motiveCorrect: Boolean(source.result.motiveCorrect),
+      methodCorrect: Boolean(source.result.methodCorrect),
+      correctEvidence: unique(source.result.correctEvidence).filter((id) => clueIds.has(id)).slice(0, 3),
+      submittedEvidence: unique(source.result.submittedEvidence).filter((id) => clueIds.has(id)).slice(0, 3),
+      completedAt: Number(source.result.completedAt) || Date.now(),
+    }
+    : null;
   return {
     ...createGame(caseFile.id, Number(source.startedAt) || Date.now()),
-    ...source,
     caseId: caseFile.id,
+    startedAt: Number(source.startedAt) || Date.now(),
+    updatedAt: Number(source.updatedAt) || Date.now(),
     discovered: unique(source.discovered).filter((id) => clueIds.has(id)),
-    interviews: Object.fromEntries(Object.entries(source.interviews || {}).filter(([id]) => suspectIds.has(id)).map(([id, values]) => [id, unique(values)])),
-    conversation: Object.fromEntries(Object.entries(source.conversation || {}).filter(([id]) => suspectIds.has(id)).map(([id, values]) => [id, Array.isArray(values) ? values.slice(-20) : []])),
+    interviews: Object.fromEntries(Object.entries(source.interviews || {}).filter(([id]) => suspectIds.has(id)).map(([id, values]) => [id, unique(values).slice(0, 4)])),
+    conversation: safeConversation,
     links: unique(source.links).filter((key) => validLinks.includes(key)),
-    deductions: unique(source.deductions),
+    deductions: unique(source.deductions).map((item) => String(item).slice(0, 180)).slice(0, 4),
     hintsUsed: nonNegative(source.hintsUsed),
     wrongAccusations: nonNegative(source.wrongAccusations),
-    completed: Boolean(source.completed),
+    completed: Boolean(source.completed && result?.solved),
+    result,
   };
 }
 

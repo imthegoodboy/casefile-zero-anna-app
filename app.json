@@ -1,11 +1,17 @@
 {
   "slug": "casefile-zero",
   "name": "Casefile Zero",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "tagline": "Read the room. Link the evidence. Name the liar.",
   "description": "Casefile Zero is a cinematic detective game built for Anna. Investigate four illustrated mysteries, interrogate a recurring cast of suspects, connect evidence on a tactile case board, and make fully supported accusations. Customize your detective, use grounded optional AI interrogations, uncover timelines and deductions, earn ranks, and sync progress through Anna—with no separate account or model key.",
   "category": "entertainment",
+  "changelog": "Marketplace review hardening: declares both saveable Agent session permission modes, adds English product screenshots, bounds hydrated case state, and preserves recoverable investigations through Anna Storage.",
   "logo_file": "bundle/icon.svg",
+  "screenshots": [
+    "bundle/listing/desk.png",
+    "bundle/listing/board.png",
+    "bundle/listing/result.png"
+  ],
   "homepage_url": "https://github.com/imthegoodboy/casefile-zero-anna-app",
   "support_url": "https://github.com/imthegoodboy/casefile-zero-anna-app/issues",
   "privacy_url": "https://github.com/imthegoodboy/casefile-zero-anna-app/blob/main/PRIVACY.md",

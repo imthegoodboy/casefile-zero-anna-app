@@ -37,6 +37,8 @@ const state = {
   cleanups: [],
 };
 
+let persistenceQueue = Promise.resolve();
+
 class Soundscape {
   constructor() {
     this.context = null;
@@ -447,16 +449,21 @@ async function localOrAnnaSet(key, value) {
   if (state.anna?.storage?.set) await state.anna.storage.set({ key, value });
 }
 
+function enqueuePersistence(key, value) {
+  persistenceQueue = persistenceQueue.catch(() => {}).then(() => localOrAnnaSet(key, value));
+  return persistenceQueue;
+}
+
 async function saveProfile() {
   setSync("saving", "Saving…");
-  try { await localOrAnnaSet(STORAGE.profile, state.profile); setSync("ready", state.connected ? "Anna synced" : "Device saved"); }
+  try { await enqueuePersistence(STORAGE.profile, state.profile); setSync("ready", state.connected ? "Anna synced" : "Device saved"); }
   catch { setSync("offline", "Device saved"); }
 }
 
 async function saveGame() {
   if (!state.game) return;
   setSync("saving", "Saving…");
-  try { await localOrAnnaSet(STORAGE.active, state.game); setSync("ready", state.connected ? "Anna synced" : "Device saved"); }
+  try { await enqueuePersistence(STORAGE.active, normalizeGame(state.game)); setSync("ready", state.connected ? "Anna synced" : "Device saved"); }
   catch { setSync("offline", "Device saved"); }
 }
 
@@ -474,7 +481,25 @@ async function connectAnna() {
 
 async function hydrate() {
   const [profile, game] = await Promise.all([localOrAnnaGet(STORAGE.profile), localOrAnnaGet(STORAGE.active)]);
-  state.profile = { ...DEFAULT_PROFILE, ...(profile && typeof profile === "object" ? profile : {}) };
+  const stored = profile && typeof profile === "object" ? profile : {};
+  const solved = Object.fromEntries(Object.entries(stored.solved || {})
+    .filter(([id]) => CASES.some((item) => item.id === id))
+    .slice(0, CASES.length)
+    .map(([id, record]) => [id, {
+      bestScore: Math.max(0, Math.min(1000, Number(record?.bestScore) || 0)),
+      rank: String(record?.rank || "Field Investigator").slice(0, 48),
+      solvedAt: Number(record?.solvedAt) || Date.now(),
+    }]));
+  state.profile = {
+    ...DEFAULT_PROFILE,
+    name: String(stored.name || DEFAULT_PROFILE.name).trim().slice(0, 28) || DEFAULT_PROFILE.name,
+    detectiveId: DETECTIVES.some((item) => item.id === stored.detectiveId) ? stored.detectiveId : DEFAULT_PROFILE.detectiveId,
+    accentId: ACCENTS.some((item) => item.id === stored.accentId) ? stored.accentId : DEFAULT_PROFILE.accentId,
+    sound: stored.sound !== false,
+    xp: Math.max(0, Math.min(100000, Number(stored.xp) || 0)),
+    solved,
+    attempts: Math.max(0, Math.min(10000, Number(stored.attempts) || 0)),
+  };
   state.game = game && typeof game === "object" ? normalizeGame(game) : null;
 }
 
