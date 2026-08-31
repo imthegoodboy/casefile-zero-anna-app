@@ -6,9 +6,9 @@ export const DETECTIVES = [
 ];
 
 export const ACCENTS = [
-  { id: "vermilion", name: "Vermilion", value: "#c6412d" },
-  { id: "brass", name: "Old brass", value: "#b28a4f" },
-  { id: "sage", name: "Night sage", value: "#718070" },
+  { id: "vermilion", name: "Vermilion", value: "#c6412d", effect: "A decisive red marks found evidence, active links, and moments that need your attention." },
+  { id: "brass", name: "Old brass", value: "#b28a4f", effect: "A warm brass highlight pulls focus toward evidence notes, progress, and the case record." },
+  { id: "sage", name: "Night sage", value: "#718070", effect: "A quiet green tint softens found markers and active states across the investigation." },
 ];
 
 export const CAST = {

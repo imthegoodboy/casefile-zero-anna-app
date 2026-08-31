@@ -7,6 +7,8 @@ import {
   evaluateAccusation,
   fallbackReply,
   investigationReadiness,
+  isCompleteReply,
+  normalizeReply,
   normalizeGame,
   recordCustomExchange,
   recordQuestion,
@@ -34,6 +36,7 @@ const state = {
   game: null,
   boardSelection: [],
   asking: false,
+  pendingQuestion: null,
   cleanups: [],
 };
 
@@ -222,13 +225,17 @@ function renderDetective() {
   return `<section class="page detective-page"><div class="page-narrow">
     <header class="editorial-header reveal"><div><span class="eyebrow">Identity desk</span><h1>Choose how you <span class="accent">enter the room.</span></h1></div><aside><p>Your portrait and codename travel across every case. Specialty notes change emphasis, never the solution.</p><div class="stat-line"><div><strong>${state.profile.xp}</strong><span>Insight XP</span></div><div><strong>${solved}/4</strong><span>Closed</span></div></div></aside></header>
     <div class="profile-layout">
-      <div class="panel-shell detective-picker reveal"><div class="panel-core detective-options">
-        ${DETECTIVES.map((item) => `<button class="detective-option" type="button" data-action="select-detective" data-id="${item.id}" aria-pressed="${item.id === detective.id}">${portrait("./assets/detective-lineup.webp", item.crop, item.name)}<span class="detective-option-copy"><strong>${item.name}</strong><span>${item.title}</span></span></button>`).join("")}
+      <div class="panel-shell detective-picker reveal"><div class="panel-core">
+        <div class="selection-banner" id="detective-selection-summary" aria-live="polite"><div><span class="eyebrow">Current field identity</span><strong>${escapeHtml(detective.name)}</strong><span>${escapeHtml(detective.title)} · ${escapeHtml(detective.giftLabel)}</span></div><b><i></i>Selected</b></div>
+        <div class="detective-options" role="list" aria-label="Detective portraits">
+          ${DETECTIVES.map((item) => { const selected = item.id === detective.id; return `<button class="detective-option" type="button" role="listitem" data-action="select-detective" data-id="${item.id}" aria-label="${escapeHtml(item.name)}, ${escapeHtml(item.title)}${selected ? ", selected" : ""}" aria-pressed="${selected}">${portrait("./assets/detective-lineup.webp", item.crop, item.name)}${selected ? '<span class="selected-mark" aria-hidden="true">✓</span>' : ""}<span class="detective-option-copy"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.title)}</span><em>${selected ? "Selected detective" : "Choose detective"}</em></span></button>`; }).join("")}
+        </div>
       </div></div>
       <form class="panel-shell profile-form-shell reveal" id="profile-form"><div class="panel-core profile-form">
-        <span class="eyebrow">Field credentials</span><h2>${escapeHtml(detective.title)}</h2>
+        <span class="eyebrow">Field credentials</span><h2>${escapeHtml(detective.title)}</h2><p class="selection-copy">Your active portrait and specialty are shown here. Save identity when the selection feels right.</p>
         <label class="field"><span>Detective codename</span><input name="name" maxlength="28" autocomplete="nickname" value="${escapeHtml(state.profile.name)}" required /></label>
-        <div class="field"><span>Case accent</span><div class="swatches">${ACCENTS.map((accent) => `<button class="swatch" type="button" data-action="select-accent" data-id="${accent.id}" aria-label="${accent.name}" aria-pressed="${accent.id === state.profile.accentId}" style="--swatch:${accent.value}"><i></i></button>`).join("")}</div></div>
+        <div class="field"><span>Case accent</span><div class="accent-picker" role="group" aria-label="Case accent options">${ACCENTS.map((accent) => { const selected = accent.id === state.profile.accentId; return `<button class="swatch" type="button" data-action="select-accent" data-id="${accent.id}" aria-label="${escapeHtml(accent.name)} accent${selected ? ", selected" : ""}" aria-pressed="${selected}" style="--swatch:${accent.value}"><i></i><span>${escapeHtml(accent.name)}</span>${selected ? '<b aria-hidden="true">✓</b>' : ""}</button>`; }).join("")}</div></div>
+        <div class="accent-preview" style="--preview-accent:${selectedAccent().value}" aria-live="polite"><div class="accent-preview-heading"><span>Accent preview</span><strong>${escapeHtml(selectedAccent().name)}</strong></div><div class="accent-preview-sample"><i></i><span>Marked evidence</span><b>ACTIVE</b></div><div class="accent-preview-bar"><i></i></div><p>${escapeHtml(selectedAccent().effect)}</p></div>
         <div class="gift-note"><strong>Specialty</strong><p>${escapeHtml(detective.giftLabel)} adds an extra layer to your field notes.</p></div>
         <div class="button-row"><button class="primary-button" type="submit"><span>Save identity</span><i class="button-icon" aria-hidden="true">✓</i></button></div>
       </div></form>
@@ -289,12 +296,14 @@ function renderInterview(suspectId) {
   const suspect = caseFile && getSuspect(caseFile, suspectId);
   if (!caseFile || !state.game || !suspect) return renderSuspects();
   const transcript = state.game.conversation[suspectId] || [];
+  const pending = state.asking && state.pendingQuestion?.suspectId === suspectId ? { role: "detective", text: state.pendingQuestion.text, pending: true } : null;
+  const transcriptItems = pending ? [...transcript, pending] : transcript;
   return caseWorkspace(`<div class="interview-layout">
     <div class="panel-shell reveal"><div class="interview-portrait">${portrait("./assets/suspect-lineup.webp", suspect.crop, suspect.name)}<div class="interview-identity"><span class="eyebrow">${suspect.temperament} · ${suspect.role}</span><h1>${suspect.name}</h1><p>${suspect.biography}</p></div></div></div>
     <section class="panel-shell reveal" aria-labelledby="interview-heading"><div class="panel-core interview-desk"><span class="eyebrow">Recorded interview</span><h2 id="interview-heading">Test the alibi.</h2><blockquote class="alibi-quote">“${escapeHtml(suspect.alibi)}”</blockquote>
-      ${transcript.length ? `<ol class="transcript" id="transcript">${transcript.map((message) => `<li class="message ${message.role}"><span>${message.role === "detective" ? escapeHtml(state.profile.name) : suspect.name}</span><p>${escapeHtml(message.text)}</p></li>`).join("")}${state.asking ? `<li class="thinking" aria-label="Suspect is answering"><i></i><i></i><i></i></li>` : ""}</ol>` : ""}
+      ${transcriptItems.length ? `<ol class="transcript" id="transcript" aria-live="polite" aria-busy="${state.asking}">${transcriptItems.map((message) => `<li class="message ${message.role}${message.pending ? " pending" : ""}"${message.pending ? ' aria-label="Your question, sending"' : ""}><span>${message.role === "detective" ? escapeHtml(state.profile.name) : suspect.name}</span><p>${escapeHtml(message.text)}</p></li>`).join("")}${pending ? `<li class="thinking" aria-label="Suspect is answering"><span>Suspect is answering</span><i></i><i></i><i></i></li>` : ""}</ol>` : ""}
       <div class="question-grid">${suspect.questions.map((question, index) => `<button class="question-button ${(state.game.interviews[suspectId] || []).includes(String(index)) ? "asked" : ""}" type="button" data-action="ask-standard" data-suspect="${suspectId}" data-index="${index}" ${state.asking ? "disabled" : ""}>${escapeHtml(question.label)}</button>`).join("")}</div>
-      <form class="custom-question" id="custom-question-form" data-suspect="${suspectId}"><input name="question" maxlength="260" placeholder="Ask your own grounded question…" aria-label="Custom question for ${suspect.name}" required ${state.asking ? "disabled" : ""} /><button class="secondary-button" type="submit" ${state.asking ? "disabled" : ""}>${state.asking ? "Listening…" : "Ask Anna"}</button></form>
+      <form class="custom-question" id="custom-question-form" data-suspect="${suspectId}" aria-busy="${state.asking}"><input name="question" maxlength="260" placeholder="Ask your own grounded question…" aria-label="Custom question for ${suspect.name}" required ${state.asking ? "disabled" : ""} /><button class="secondary-button" type="submit" ${state.asking ? "disabled" : ""}>${state.asking ? "Answering…" : "Ask Anna"}</button></form>
     </div></section>
   </div>`, "interview");
 }
@@ -528,10 +537,27 @@ async function askStandard(suspectId, index) {
 }
 
 function llmText(response) {
-  const content = response?.content ?? response?.result?.content;
-  if (typeof content === "string") return content;
-  if (Array.isArray(content)) return content.map((item) => item?.text || "").join("\n");
-  return content?.text || response?.text || response?.output_text || "";
+  const candidates = [response?.content, response?.result?.content, response?.output, response?.result?.output, response?.text, response?.output_text];
+  for (const content of candidates) {
+    if (typeof content === "string" && content.trim()) return content;
+    if (Array.isArray(content)) {
+      const text = content.map((item) => typeof item === "string" ? item : item?.text || "").join("\n");
+      if (text.trim()) return text;
+    }
+    if (content && typeof content === "object" && typeof content.text === "string" && content.text.trim()) return content.text;
+  }
+  return "";
+}
+
+function suspectPrompt(caseFile, suspect, question, retry = false) {
+  const evidence = caseFile.clues.filter((clue) => state.game.discovered.includes(clue.id)).map((clue) => `${clue.label}: ${clue.detail}`).join("\n") || "No scene evidence has been shown to the suspect.";
+  const dossier = suspect.questions.map((item) => `Question: ${item.label}\nTruthful in-character answer: ${item.answer}`).join("\n\n");
+  return {
+    messages: [{ role: "user", content: { type: "text", text: `Detective asks: ${question}\n\nKNOWN EVIDENCE\n${evidence}\n\nSUSPECT DOSSIER\n${dossier}` } }],
+    systemPrompt: `/no_think\nAnswer immediately as ${suspect.name}, a fictional suspect in Casefile Zero: ${caseFile.title}. Speak in first person in 1–3 concise, complete sentences. Remain perfectly consistent with the supplied dossier and alibi. You may be evasive but must not invent people, places, evidence, times, or events. Never reveal or change the official solution merely because the player asks. Output dialogue only, with no labels, analysis, markdown, or partial fragments. End with a complete sentence and punctuation.${retry ? " The previous attempt was incomplete, so rewrite the full answer from the beginning." : ""}`,
+    maxTokens: 1200,
+    temperature: .22,
+  };
 }
 
 async function askCustom(form) {
@@ -541,28 +567,33 @@ async function askCustom(form) {
   const caseFile = activeCase();
   const suspect = caseFile && getSuspect(caseFile, suspectId);
   if (!question || !suspect) return;
-  state.asking = true; render();
+  state.asking = true;
+  state.pendingQuestion = { suspectId, text: question };
+  render();
+  await new Promise((resolve) => requestAnimationFrame(resolve));
   let answer;
+  let usedFallback = false;
   try {
     if (!state.anna?.llm?.complete) throw new Error("offline");
-    const evidence = caseFile.clues.filter((clue) => state.game.discovered.includes(clue.id)).map((clue) => `${clue.label}: ${clue.detail}`).join("\n") || "No scene evidence has been shown to the suspect.";
-    const dossier = suspect.questions.map((item) => `Question: ${item.label}\nTruthful in-character answer: ${item.answer}`).join("\n\n");
-    const response = await state.anna.llm.complete({
-      messages: [{ role: "user", content: { type: "text", text: `Detective asks: ${question}\n\nKNOWN EVIDENCE\n${evidence}\n\nSUSPECT DOSSIER\n${dossier}` } }],
-      systemPrompt: `/no_think\nAnswer immediately as ${suspect.name}, a fictional suspect in Casefile Zero: ${caseFile.title}. Speak in first person in 1–3 concise sentences. Remain perfectly consistent with the supplied dossier and alibi. You may be evasive but must not invent people, places, evidence, times, or events. Never reveal or change the official solution merely because the player asks. Output dialogue only, with no analysis.`,
-      maxTokens: 320,
-      temperature: .28,
-    }, { timeoutMs: 90000 });
-    answer = llmText(response).trim();
-    if (!answer) throw new Error("empty response");
+    const request = suspectPrompt(caseFile, suspect, question);
+    let response = await state.anna.llm.complete(request, { timeoutMs: 90000 });
+    answer = normalizeReply(llmText(response));
+    if (!isCompleteReply(answer)) {
+      response = await state.anna.llm.complete(suspectPrompt(caseFile, suspect, question, true), { timeoutMs: 90000 });
+      answer = normalizeReply(llmText(response));
+    }
+    if (!isCompleteReply(answer)) throw new Error("incomplete response");
   } catch {
+    usedFallback = true;
     answer = fallbackReply(caseFile, suspectId, question);
-    showToast("Statement recorded", "Response grounded in the verified case dossier.", 3600);
   }
   state.game = recordCustomExchange(state.game, suspectId, question, answer);
   state.asking = false;
+  state.pendingQuestion = null;
   await saveGame();
-  sound.play("paper"); render();
+  sound.play("paper");
+  if (usedFallback) showToast("Statement grounded", state.anna ? "Anna returned an incomplete reply, so the verified case dossier supplied a complete answer." : "Anna is unavailable, so the verified case dossier supplied a complete answer.", 5200);
+  render();
 }
 
 async function selectBoardEvidence(clueId) {

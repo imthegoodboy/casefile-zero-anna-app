@@ -33,7 +33,7 @@ anna-app apps publish --account https://anna.partners --json
 
 After upload, install and test the created version in Anna before submitting it for public review.
 
-The release includes six real product-state screenshots (`bundle/listing/desk.png`, `scene.png`, `interview.png`, `board.png`, `timeline.png`, and `result.png`).
+The current release includes six real product-state screenshots (`bundle/listing/desk.png`, `scene.png`, `interview.png`, `board.png`, `timeline.png`, and `result.png`). The UX review smoke test also covers persistent detective and accent selection, immediate custom-question rendering, complete grounded fallback replies, and narrow-screen overflow protection.
 For a repeatable browser check, point `PLAYWRIGHT_MODULE` at a local Playwright package and run:
 
 ```powershell

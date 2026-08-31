@@ -42,7 +42,7 @@ export function normalizeGame(value) {
         Array.isArray(values)
           ? values
             .filter((item) => item && (item.role === "detective" || item.role === "suspect"))
-            .map((item) => ({ role: item.role, text: String(item.text || "").slice(0, 520) }))
+            .map((item) => ({ role: item.role, text: normalizeReply(item.text).slice(0, 1200) }))
             .filter((item) => item.text)
             .slice(-20)
           : [],
@@ -101,6 +101,21 @@ export function recordCustomExchange(game, suspectId, question, answer, now = Da
   if (!CAST[suspectId] || !question || !answer) return game;
   const transcript = [...(game.conversation[suspectId] || []), { role: "detective", text: question }, { role: "suspect", text: answer }].slice(-20);
   return { ...game, conversation: { ...game.conversation, [suspectId]: transcript }, updatedAt: now };
+}
+
+export function normalizeReply(value) {
+  return String(value ?? "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+export function isCompleteReply(value) {
+  const text = normalizeReply(value);
+  if (text.length < 18 || text.length > 1200) return false;
+  if (/^(?:what he knows|situation|answer|analysis|assistant|suspect dossier)\b/i.test(text)) return false;
+  return /[.!?…]["')\]}]*$/.test(text);
 }
 
 export function connectEvidence(game, firstId, secondId, now = Date.now()) {

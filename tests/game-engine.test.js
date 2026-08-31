@@ -12,6 +12,8 @@ import {
   evaluateAccusation,
   fallbackReply,
   investigationReadiness,
+  isCompleteReply,
+  normalizeReply,
   normalizeGame,
   recordQuestion,
   updateProfileAfterResult,
@@ -112,7 +114,7 @@ test("saved games are sanitized before hydration", () => {
   assert.deepEqual(normalized.links, ["glove::ledger"]);
   assert.equal(normalized.hintsUsed, 0);
   assert.equal(normalized.conversation.mara.length, 1);
-  assert.equal(normalized.conversation.mara[0].text.length, 520);
+  assert.equal(normalized.conversation.mara[0].text.length, 1200);
   assert.equal(normalized.result, null);
   assert.ok(JSON.stringify(normalized).length < 12_000);
 });
@@ -121,6 +123,12 @@ test("offline custom questions return a case-safe recorded response", () => {
   const answer = fallbackReply(CASES[0], "mara", "What time was your train ticket punched?");
   assert.match(answer, /ticket|punch|departure/i);
   assert.equal(fallbackReply(CASES[0], "unknown", "hello"), "I have nothing to say.");
+});
+
+test("custom suspect replies must be complete dialogue, not truncated model fragments", () => {
+  assert.equal(isCompleteReply("What he knows/Situation):* We had a professional"), false);
+  assert.equal(isCompleteReply("We had a professional arrangement, but I never saw him after midnight."), true);
+  assert.equal(normalizeReply("  We had a professional\narrangement.  "), "We had a professional\narrangement.");
 });
 
 test("solved cases update XP and preserve the best score", () => {
