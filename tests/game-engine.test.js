@@ -122,6 +122,9 @@ test("saved games are sanitized before hydration", () => {
 test("offline custom questions return a case-safe recorded response", () => {
   const answer = fallbackReply(CASES[0], "mara", "What time was your train ticket punched?");
   assert.match(answer, /ticket|punch|departure/i);
+  const generic = fallbackReply(CASES[0], "reed", "Hey, what is your name and tell me about the situation?");
+  assert.match(generic, /Alistair Reed|railway architect/i);
+  assert.notEqual(generic, CASES[0].suspects.reed.questions[0].answer);
   assert.equal(fallbackReply(CASES[0], "unknown", "hello"), "I have nothing to say.");
 });
 

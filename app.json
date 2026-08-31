@@ -1,11 +1,11 @@
 {
   "slug": "casefile-zero",
   "name": "Casefile Zero",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "tagline": "Read the room. Link the evidence. Name the liar.",
   "description": "Casefile Zero is a cinematic detective game built for Anna. Investigate four illustrated mysteries, interrogate a recurring cast of suspects, connect evidence on a tactile case board, reconstruct the timeline, and make fully supported accusations. Customize your detective, use grounded optional AI interrogations, uncover deductions, earn case ranks, and return to an archive that remembers your progress. The core game is intentionally tool-less: it uses deterministic in-app rules, Anna Storage for save sync, and optional Anna Host LLM access for custom suspect questions—no separate account or model key required.",
   "category": "entertainment",
-  "changelog": "UX review hardening: makes detective and accent selections persistent and legible, shows each accent's case effect, displays custom questions immediately, and rejects incomplete suspect replies in favor of complete grounded dialogue.",
+  "changelog": "Final UX hardening: custom questions now render immediately and use a fast dialogue model with complete-response validation, contextual fallbacks, and clearer sound controls with audible field cues.",
   "logo_file": "bundle/icon.svg",
   "screenshots": [
     "bundle/listing/desk.png",

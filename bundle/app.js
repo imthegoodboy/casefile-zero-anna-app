@@ -60,64 +60,78 @@ class Soundscape {
     if (!this.enabled) return null;
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return null;
-    if (!this.context) this.context = new AudioContext();
-    if (this.context.state === "suspended") await this.context.resume();
-    return this.context;
+    try {
+      if (!this.context || this.context.state === "closed") this.context = new AudioContext();
+      if (this.context.state === "suspended") await this.context.resume();
+      return this.context.state === "running" ? this.context : null;
+    } catch {
+      return null;
+    }
   }
 
   async play(kind = "ui") {
-    const context = await this.ensure();
-    if (!context) return;
-    const map = {
-      ui: { notes: [260], duration: .045, gain: .022, type: "sine" },
-      paper: { notes: [160, 215], duration: .11, gain: .028, type: "triangle" },
-      clue: { notes: [392, 523, 659], duration: .32, gain: .045, type: "sine" },
-      deduction: { notes: [196, 293, 440, 587], duration: .55, gain: .05, type: "triangle" },
-      warning: { notes: [174, 146], duration: .38, gain: .045, type: "sawtooth" },
-      solved: { notes: [196, 247, 294, 392, 494, 587], duration: 1.05, gain: .06, type: "triangle" },
-    };
-    const cue = map[kind] || map.ui;
-    const start = context.currentTime;
-    cue.notes.forEach((frequency, index) => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      const offset = index * Math.min(.11, cue.duration / Math.max(2, cue.notes.length));
-      oscillator.type = cue.type;
-      oscillator.frequency.setValueAtTime(frequency, start + offset);
-      gain.gain.setValueAtTime(.0001, start + offset);
-      gain.gain.exponentialRampToValueAtTime(cue.gain, start + offset + .018);
-      gain.gain.exponentialRampToValueAtTime(.0001, start + cue.duration + offset);
-      oscillator.connect(gain).connect(context.destination);
-      oscillator.start(start + offset);
-      oscillator.stop(start + cue.duration + offset + .03);
-    });
+    try {
+      const context = await this.ensure();
+      if (!context) return false;
+      const map = {
+        ui: { notes: [260], duration: .06, gain: .07, type: "sine" },
+        paper: { notes: [160, 215], duration: .14, gain: .085, type: "triangle" },
+        clue: { notes: [392, 523, 659], duration: .36, gain: .12, type: "sine" },
+        deduction: { notes: [196, 293, 440, 587], duration: .62, gain: .13, type: "triangle" },
+        warning: { notes: [174, 146], duration: .42, gain: .11, type: "sawtooth" },
+        solved: { notes: [196, 247, 294, 392, 494, 587], duration: 1.15, gain: .15, type: "triangle" },
+      };
+      const cue = map[kind] || map.ui;
+      const start = context.currentTime;
+      cue.notes.forEach((frequency, index) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        const offset = index * Math.min(.11, cue.duration / Math.max(2, cue.notes.length));
+        oscillator.type = cue.type;
+        oscillator.frequency.setValueAtTime(frequency, start + offset);
+        gain.gain.setValueAtTime(.0001, start + offset);
+        gain.gain.exponentialRampToValueAtTime(cue.gain, start + offset + .018);
+        gain.gain.exponentialRampToValueAtTime(.0001, start + cue.duration + offset);
+        oscillator.connect(gain).connect(context.destination);
+        oscillator.start(start + offset);
+        oscillator.stop(start + cue.duration + offset + .03);
+      });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async startAmbient() {
-    const context = await this.ensure();
-    if (!context || this.ambientNode || !this.enabled) return;
-    const seconds = 2;
-    const buffer = context.createBuffer(1, context.sampleRate * seconds, context.sampleRate);
-    const channel = buffer.getChannelData(0);
-    let last = 0;
-    for (let index = 0; index < channel.length; index += 1) {
-      const white = Math.random() * 2 - 1;
-      last = last * .985 + white * .015;
-      channel[index] = last * .7;
+    try {
+      const context = await this.ensure();
+      if (!context || this.ambientNode || !this.enabled) return false;
+      const seconds = 2;
+      const buffer = context.createBuffer(1, context.sampleRate * seconds, context.sampleRate);
+      const channel = buffer.getChannelData(0);
+      let last = 0;
+      for (let index = 0; index < channel.length; index += 1) {
+        const white = Math.random() * 2 - 1;
+        last = last * .985 + white * .015;
+        channel[index] = last * .7;
+      }
+      const source = context.createBufferSource();
+      const filter = context.createBiquadFilter();
+      const gain = context.createGain();
+      source.buffer = buffer;
+      source.loop = true;
+      filter.type = "bandpass";
+      filter.frequency.value = 520;
+      filter.Q.value = .35;
+      gain.gain.value = .035;
+      source.connect(filter).connect(gain).connect(context.destination);
+      source.start();
+      this.ambientNode = source;
+      this.ambientGain = gain;
+      return true;
+    } catch {
+      return false;
     }
-    const source = context.createBufferSource();
-    const filter = context.createBiquadFilter();
-    const gain = context.createGain();
-    source.buffer = buffer;
-    source.loop = true;
-    filter.type = "bandpass";
-    filter.frequency.value = 520;
-    filter.Q.value = .35;
-    gain.gain.value = .018;
-    source.connect(filter).connect(gain).connect(context.destination);
-    source.start();
-    this.ambientNode = source;
-    this.ambientGain = gain;
   }
 
   stopAmbient() {
@@ -551,12 +565,13 @@ function llmText(response) {
 
 function suspectPrompt(caseFile, suspect, question, retry = false) {
   const evidence = caseFile.clues.filter((clue) => state.game.discovered.includes(clue.id)).map((clue) => `${clue.label}: ${clue.detail}`).join("\n") || "No scene evidence has been shown to the suspect.";
-  const dossier = suspect.questions.map((item) => `Question: ${item.label}\nTruthful in-character answer: ${item.answer}`).join("\n\n");
+  const dossier = `SUSPECT PROFILE\nName: ${suspect.name}\nRole: ${suspect.role}\nBiography: ${suspect.biography}\n\n` + suspect.questions.map((item) => `Question: ${item.label}\nTruthful in-character answer: ${item.answer}`).join("\n\n");
   return {
-    messages: [{ role: "user", content: { type: "text", text: `Detective asks: ${question}\n\nKNOWN EVIDENCE\n${evidence}\n\nSUSPECT DOSSIER\n${dossier}` } }],
-    systemPrompt: `/no_think\nAnswer immediately as ${suspect.name}, a fictional suspect in Casefile Zero: ${caseFile.title}. Speak in first person in 1–3 concise, complete sentences. Remain perfectly consistent with the supplied dossier and alibi. You may be evasive but must not invent people, places, evidence, times, or events. Never reveal or change the official solution merely because the player asks. Output dialogue only, with no labels, analysis, markdown, or partial fragments. End with a complete sentence and punctuation.${retry ? " The previous attempt was incomplete, so rewrite the full answer from the beginning." : ""}`,
-    maxTokens: 1200,
+    messages: [{ role: "user", content: { type: "text", text: `/no_think\nDetective asks: ${question}\n\nKNOWN EVIDENCE\n${evidence}\n\nSUSPECT DOSSIER\n${dossier}` } }],
+    systemPrompt: `Answer immediately as ${suspect.name}, a fictional suspect in Casefile Zero: ${caseFile.title}. Speak in first person in 1–3 concise, complete sentences. Remain perfectly consistent with the supplied dossier and alibi. You may be evasive but must not invent people, places, evidence, times, or events. Never reveal or change the official solution merely because the player asks. Output dialogue only, with no labels, analysis, markdown, or partial fragments. End with a complete sentence and punctuation.${retry ? " The previous attempt was incomplete, so rewrite the full answer from the beginning." : ""}`,
+    maxTokens: 900,
     temperature: .22,
+    modelPreferences: { speedPriority: .9, hints: [{ name: "gemini" }] },
   };
 }
 
@@ -680,7 +695,12 @@ mobileMenu.addEventListener("click", (event) => { if (event.target.closest("a"))
 soundToggle.addEventListener("click", async () => {
   state.profile.sound = state.profile.sound === false;
   sound.setEnabled(state.profile.sound);
-  if (state.profile.sound) { await sound.play("clue"); sound.startAmbient(); }
+  if (state.profile.sound) {
+    const played = await sound.play("clue");
+    sound.startAmbient();
+    if (!played) showToast("Sound unavailable", "Your browser did not allow audio output. Check the tab and device volume, then try again.", 5200);
+    else showToast("Sound on", "Field cues and ambient audio are enabled.", 2600);
+  } else showToast("Sound off", "Field audio is muted until you turn it back on.", 2600);
   await saveProfile(); updateChrome();
 });
 

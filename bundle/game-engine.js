@@ -202,10 +202,19 @@ export function updateProfileAfterResult(profile, game, result) {
 export function fallbackReply(caseFile, suspectId, question) {
   const suspect = caseFile.suspects[suspectId];
   if (!suspect) return "I have nothing to say.";
-  const terms = String(question || "").toLowerCase();
-  const scored = suspect.questions.map((item, index) => ({ index, score: item.label.toLowerCase().split(/\W+/).filter((word) => word.length > 3 && terms.includes(word)).length }));
+  const prompt = String(question || "").trim();
+  const promptWords = new Set(prompt.toLowerCase().split(/\W+/).filter((word) => word.length > 3 && !FALLBACK_STOP_WORDS.has(word)));
+  const scored = suspect.questions.map((item, index) => ({ index, score: item.label.toLowerCase().split(/\W+/).filter((word) => promptWords.has(word)).length }));
   scored.sort((a, b) => b.score - a.score);
-  return suspect.questions[scored[0]?.score ? scored[0].index : 0].answer;
+  if (scored[0]?.score) return suspect.questions[scored[0].index].answer;
+
+  const identityData = CAST[suspectId] || {};
+  const identity = `I'm ${identityData.name || "the suspect"}, the ${identityData.role || "person of interest"}.`;
+  const alibi = suspect.alibi.trim();
+  if (/\b(name|who are you|introduce|situation|happen|happened|know|tell me|hey|hello)\b/i.test(prompt)) {
+    return `${identity} ${alibi}`;
+  }
+  return alibi;
 }
 
 export function connectionKey(ids) {
@@ -231,3 +240,5 @@ function unique(value) {
 function nonNegative(value) {
   return Math.max(0, Number(value) || 0);
 }
+
+const FALLBACK_STOP_WORDS = new Set(["about", "account", "after", "and", "are", "did", "give", "have", "hello", "hey", "how", "into", "please", "tell", "that", "the", "this", "what", "when", "where", "which", "who", "why", "with", "you", "your"]);
