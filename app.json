@@ -1,15 +1,18 @@
 {
   "slug": "casefile-zero",
   "name": "Casefile Zero",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "tagline": "Read the room. Link the evidence. Name the liar.",
-  "description": "Casefile Zero is a cinematic detective game built for Anna. Investigate four illustrated mysteries, interrogate a recurring cast of suspects, connect evidence on a tactile case board, and make fully supported accusations. Customize your detective, use grounded optional AI interrogations, uncover timelines and deductions, earn ranks, and sync progress through Anna—with no separate account or model key.",
+  "description": "Casefile Zero is a cinematic detective game built for Anna. Investigate four illustrated mysteries, interrogate a recurring cast of suspects, connect evidence on a tactile case board, reconstruct the timeline, and make fully supported accusations. Customize your detective, use grounded optional AI interrogations, uncover deductions, earn case ranks, and return to an archive that remembers your progress. The core game is intentionally tool-less: it uses deterministic in-app rules, Anna Storage for save sync, and optional Anna Host LLM access for custom suspect questions—no separate account or model key required.",
   "category": "entertainment",
-  "changelog": "Marketplace review hardening: declares both saveable Agent session permission modes, adds English product screenshots, bounds hydrated case state, and preserves recoverable investigations through Anna Storage.",
+  "changelog": "Marketplace presentation update: expands the product story and listing gallery, confirms the intentional tool-less architecture, and keeps the complete investigation loop, restart recovery, and saveable permissions review-ready.",
   "logo_file": "bundle/icon.svg",
   "screenshots": [
     "bundle/listing/desk.png",
+    "bundle/listing/scene.png",
+    "bundle/listing/interview.png",
     "bundle/listing/board.png",
+    "bundle/listing/timeline.png",
     "bundle/listing/result.png"
   ],
   "homepage_url": "https://github.com/imthegoodboy/casefile-zero-anna-app",

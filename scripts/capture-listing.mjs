@@ -16,6 +16,34 @@ await page.screenshot({ path: "bundle/listing/desk.png" });
 await page.evaluate(async () => {
   const engine = await import("./game-engine.js");
   const data = await import("./data.js");
+  const caseFile = data.CASES.find((item) => item.id === "last-departure");
+  let game = engine.createGame(caseFile.id, Date.now() - 420000);
+  for (const clue of caseFile.clues.slice(0, 3)) game = engine.discoverClue(game, clue.id).game;
+  localStorage.setItem("casefile-zero:active:v1", JSON.stringify(game));
+  location.hash = "#/scene";
+});
+await page.reload({ waitUntil: "networkidle" });
+await page.waitForTimeout(900);
+await page.screenshot({ path: "bundle/listing/scene.png" });
+
+await page.evaluate(async () => {
+  const engine = await import("./game-engine.js");
+  const data = await import("./data.js");
+  const caseFile = data.CASES.find((item) => item.id === "last-departure");
+  let game = engine.createGame(caseFile.id, Date.now() - 420000);
+  for (const clue of caseFile.clues.slice(0, 4)) game = engine.discoverClue(game, clue.id).game;
+  game = engine.recordQuestion(game, "reed", 0, caseFile.suspects.reed.questions[0].answer);
+  game = engine.recordQuestion(game, "mara", 0, caseFile.suspects.mara.questions[0].answer);
+  localStorage.setItem("casefile-zero:active:v1", JSON.stringify(game));
+  location.hash = "#/interview/reed";
+});
+await page.reload({ waitUntil: "networkidle" });
+await page.waitForTimeout(900);
+await page.screenshot({ path: "bundle/listing/interview.png" });
+
+await page.evaluate(async () => {
+  const engine = await import("./game-engine.js");
+  const data = await import("./data.js");
   let game = engine.createGame("last-departure", Date.now() - 420000);
   for (const clue of data.CASES.find((item) => item.id === "last-departure").clues) game = engine.discoverClue(game, clue.id).game;
   game = engine.recordQuestion(game, "reed", 0, "The platform clock was wrong.");
@@ -27,6 +55,19 @@ await page.evaluate(async () => {
 await page.reload({ waitUntil: "networkidle" });
 await page.waitForTimeout(1200);
 await page.screenshot({ path: "bundle/listing/board.png" });
+
+await page.evaluate(async () => {
+  const engine = await import("./game-engine.js");
+  const data = await import("./data.js");
+  const caseFile = data.CASES.find((item) => item.id === "last-departure");
+  let game = engine.createGame(caseFile.id, Date.now() - 420000);
+  for (const clue of caseFile.clues.slice(0, 3)) game = engine.discoverClue(game, clue.id).game;
+  localStorage.setItem("casefile-zero:active:v1", JSON.stringify(game));
+  location.hash = "#/timeline";
+});
+await page.reload({ waitUntil: "networkidle" });
+await page.waitForTimeout(900);
+await page.screenshot({ path: "bundle/listing/timeline.png" });
 
 await page.evaluate(async () => {
   const engine = await import("./game-engine.js");

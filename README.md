@@ -1,6 +1,6 @@
 # Casefile Zero
 
-Casefile Zero is a cinematic detective game for Anna. It contains four complete fictional mysteries, original illustrated scenes and characters, a customizable detective identity, suspect interrogation, evidence discovery, clue linking, timeline reconstruction, accusation scoring, sound design, case ranks, and synced progress.
+Casefile Zero is a cinematic detective game for Anna. It contains four complete fictional mysteries, original illustrated scenes and characters, a customizable detective identity, suspect interrogation, evidence discovery, clue linking, timeline reconstruction, accusation scoring, sound design, case ranks, and synced progress. The listing gallery follows the complete rhythm of play—from case desk and marked scene to interrogation, board deductions, timeline, and final closure.
 
 ## How to play
 
@@ -11,7 +11,7 @@ Casefile Zero is a cinematic detective game for Anna. It contains four complete 
 5. Link evidence on the board to establish deductions.
 6. Reconstruct the timeline and submit a supported accusation.
 
-The entire core game works without an Executa or third-party service. Anna Storage syncs the profile and active case. Standalone previews use local storage, and Anna LLM access is an optional enhancement for custom suspect dialogue.
+The entire core game is intentionally built without a bundled or related Executa. Deterministic game rules keep evidence, deductions, timelines, and accusations reliable; Anna Storage syncs the profile and active case; and Anna Host LLM access is an optional enhancement for custom, case-grounded suspect questions. Standalone previews use local storage. No separate account, API key, or third-party service is required.
 
 ## Local development
 
@@ -33,7 +33,7 @@ anna-app apps publish --account https://anna.partners --json
 
 After upload, install and test the created version in Anna before submitting it for public review.
 
-The release includes three real product-state screenshots (`bundle/listing/desk.png`, `board.png`, and `result.png`).
+The release includes six real product-state screenshots (`bundle/listing/desk.png`, `scene.png`, `interview.png`, `board.png`, `timeline.png`, and `result.png`).
 For a repeatable browser check, point `PLAYWRIGHT_MODULE` at a local Playwright package and run:
 
 ```powershell
